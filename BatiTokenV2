@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+
+abstract contract BatiTokenInterface {
+    mapping(address => mapping(address => uint)) public allowance;
+
+    function balanceOf (address owner) external virtual returns(uint);
+    function transferFrom(address from, address to, uint value) external virtual returns(bool);
+    function approve(address spender, uint value) external virtual returns(bool);
+
+    event Transfer(address indexed from, address indexed to, uint value);
+    event Approval(address indexed owner, address indexed spender, uint value);
+}
+
+contract BatiTokenERC20 is ERC20, ERC20Permit {
+    address public owner = address(0);
+    address public BatiTokenContractAddress = address(0);
+    BatiTokenInterface public BatiToken;
+
+    constructor(address tokenContract) ERC20("BatiTokenV2", "BTKN") ERC20Permit("BatiToken") {
+        owner = tx.origin;
+        BatiTokenContractAddress = tokenContract;
+        BatiToken = BatiTokenInterface(BatiTokenContractAddress);
+    }
+
+    function checkIsAdmin() public view returns(bool){
+        require(owner == tx.origin, "You are not the owner of this token!");
+        return owner == tx.origin;
+    }
+
+    function mint(uint value) external returns(bool){ 
+
+        require(BatiToken.balanceOf(owner) >= value, "You don't have enough balance!");
+        
+        BatiToken.approve(tx.origin, value);
+        BatiToken.approve(address(this), value); 
+         
+        require(BatiToken.allowance(tx.origin, tx.origin) >= value, "You don't have enough allowance!");
+        require(BatiToken.transferFrom(tx.origin, address(this), value), "You don't have enough token!");
+
+        _mint(tx.origin, value);
+
+        return true;
+    } 
+}

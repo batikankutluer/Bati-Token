@@ -8,8 +8,8 @@ contract Token {
     mapping(address => uint) public balances;
     mapping(address => mapping(address => uint)) public allowance;
     uint public totalSupply = 10000 * 10 ** 18;
-    string public name = "Bati Token On Paribu";
-    string public symbol = "B-PRB";
+    string public name = "BatiToken";
+    string public symbol = "BTKN";
     uint public decimals = 18;
     
     event Transfer(address indexed from, address indexed to, uint value);
@@ -24,16 +24,16 @@ contract Token {
     }
     
     function transfer(address to, uint value) public returns(bool){
-        require(balanceOf(msg.sender) >= value, 'balance too low');
+        require(balanceOf(tx.origin) >= value, 'balance too low');
         balances[to] += value;
-        balances[msg.sender] -= value;
-        emit Transfer(msg.sender, to, value);
+        balances[tx.origin] -= value;
+        emit Transfer(tx.origin, to, value);
         return true;
     }
     
     function transferFrom(address from, address to, uint value) public returns(bool) {
         require(balanceOf(from) >= value, 'balance too low');
-        require(allowance[from][msg.sender] >= value, 'allowance too low');
+        require(allowance[from][to] >= value, 'allowance too low');
         balances[to] += value;
         balances[from] -= value;
         emit Transfer(from, to, value);
@@ -41,10 +41,8 @@ contract Token {
     } 
     
     function approve(address spender, uint value) public returns(bool){
-        allowance[msg.sender][spender] = value;
-        emit Approval(msg.sender, spender, value);
+        allowance[tx.origin][spender] = value;
+        emit Approval(tx.origin, spender, value);
         return true;
     }
 }
-
-
